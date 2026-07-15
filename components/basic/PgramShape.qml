@@ -6,10 +6,11 @@ Item {
     id: root
     required property int currentWidth
     required property int currentHeight
+    property color borderColor: "#FFFFFFFF"
+    property color overlayColor: "#FFFFFFFF"
 
     property real angle: 10
-    property int margins: 0
-
+    property int margins: 500
 
     function calculateOffset(height) {
         return Math.tan(angle * Math.PI / 180) * height;
@@ -20,6 +21,7 @@ Item {
 
     implicitWidth: currentWidth + margins
     implicitHeight: currentHeight + margins
+
 
     Shape {
         id: mask
@@ -70,7 +72,7 @@ Item {
 
     Shape {
         id: maskBorder
-        property int margins: 0
+        property int margins: 1
         property int borderOffset: 0
 
         width: root.currentWidth + margins
@@ -87,6 +89,7 @@ Item {
 
             fillColor: "transparent"
             strokeWidth: 1
+            strokeColor: root.borderColor
 
             startX: root.offset + maskBorder.margins / 2 - maskBorder.borderOffset
             startY: 0 + maskBorder.margins / 2 - maskBorder.borderOffset
@@ -119,7 +122,6 @@ Item {
         visible: false
     }
 
-
     MultiEffect {
         id: maskEffect
         anchors.centerIn: parent
@@ -129,5 +131,20 @@ Item {
 
         maskSource: mask
         maskEnabled: true
+
+        colorization: 1
+        colorizationColor: root.overlayColor
     }
+
+    MultiEffect {
+        anchors.fill: maskEffect
+        source: maskEffect
+
+        shadowEnabled: true
+        shadowBlur: 0.75
+        shadowVerticalOffset: 20
+        shadowHorizontalOffset: 20  
+        shadowColor: "#33000000"
+    }
+    
 }

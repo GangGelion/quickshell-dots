@@ -1,0 +1,220 @@
+import Quickshell
+import Quickshell.Hyprland
+import Quickshell.Wayland
+
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Shapes
+
+import "../components/basic"
+
+PanelWindow {
+    id: root
+    property bool active: true
+    property int elementWidth: 300
+    property int elementWidthExpansion: 600
+
+    property int elementHeight: 500
+    property int elementHeightExpansion: 100
+    visible: active
+
+    readonly property var sortedTopLevels: {
+        const toplevels = Hyprland.toplevels.values;
+        const jsArray = Array.from({
+            length: toplevels.length
+        }, (_, i) => toplevels[i]);
+        jsArray.sort((a, b) => {
+            const aid = a.workspace.id || 999;
+            const bid = b.workspace.id || 999;
+            return aid - bid;
+        });
+        return jsArray;
+    }
+
+    function calculateOffset(height, angle) {
+        return Math.tan(angle * Math.PI / 180) * height;
+    }
+
+    GlobalShortcut {
+        name: "toggle_overview"
+
+        onPressed: {
+            root.active = !root.active;
+        }
+    }
+
+    anchors {
+        top: true
+        bottom: true
+        left: true
+        right: true
+    }
+
+    color: "#22000000"
+
+    RowLayout {
+        id: contentLayout
+        property int currentOffset: {
+            let total = 0;
+            for (let i = 0; i < screenRepeater.count; i++) {
+                let idx = screenRepeater.itemAt(i);
+                let width = idx.containerWidth;
+                if (idx.currentSelected) {
+                    width = idx.contentWidth / 2;
+                    total += width;
+                    break;
+                }
+                total += width + spacing;
+            }
+            return total;
+        }
+
+        Behavior on x {
+            SpringAnimation {
+                spring: 5
+                damping: 0.4
+                epsilon: 0.1
+            }
+        }
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+        }
+        x: root.width / 2 - currentOffset
+
+        spacing: -root.calculateOffset(root.elementHeight, 10) + 25
+
+        Repeater {
+            id: screenRepeater
+            model: root.sortedTopLevels
+        }
+    }
+
+    // Main item component
+    Component {
+        id: pgramContainerComponent
+    Item {
+                id: pgramContainer
+                property bool currentSelected: {
+                    const active = Hyprland.activeToplevel == modelData;
+                    return active;
+                }
+                property bool nextDifferent: {
+                    if (index == root.sortedTopLevels.length - 1) {
+                        return false;
+                    }
+                    const aid = root.sortedTopLevels[index].workspace.id || 999;
+                    const bid = root.sortedTopLevels[index + 1].workspace.id || 999;
+                    return aid != bid;
+                }
+
+                readonly property int contentWidth: root.elementWidth + (currentSelected ? root.elementWidthExpansion : 0)
+                readonly property int contentHeight: root.elementHeight + (currentSelected ? root.elementHeightExpansion : 0)
+
+                property int currentWidth: contentWidth
+                property int currentHeight: contentHeight
+
+                readonly property int containerWidth: contentWidth + (nextDifferent ? 50 : 0)
+                readonly property int containerHeight: contentHeight
+                readonly property int compensate: root.calculateOffset(containerHeight - root.elementHeight, 10)
+
+                property int containerOffset: -compensate*0
+                property int currentContainerWidth: containerWidth - compensate
+                property int currentContainerHeight: containerHeight
+
+                Behavior on currentWidth {
+                    NumberAnimation {
+                        duration: 250
+                        easing: Easing.OutQuad
+                    }
+                }
+
+                Behavior on currentHeight {
+                    NumberAnimation {
+                        duration: 250
+                        easing: Easing.OutQuad
+                    }
+                }
+
+                Behavior on currentContainerWidth {
+                    NumberAnimation {
+                        duration: 250
+                        easing: Easing.OutQuad
+                    }
+                }
+
+                Behavior on currentContainerHeight {
+                    NumberAnimation {
+                        duration: 250
+                        easing: Easing.OutQuad
+                    }
+                }
+
+                Behavior on containerOffset {
+                    NumberAnimation {
+                        duration: 250
+                        easing: Easing.OutQuad
+                    }
+                }
+
+                transform: Translate {
+                    x: pgramContainer.containerOffset
+                }
+                implicitWidth: currentContainerWidth
+                implicitHeight: currentContainerHeight
+                
+                Rectangle {
+                    anchors.centerIn: pgramShape
+                    height: root.height
+                    width: 1
+                    visible: true
+                }
+
+                Loader {
+                    id: separatorLoader
+
+                    property real angle: 0
+                    x: {
+                        const distance = Math.abs(pgramContainer.containerWidth + contentLayout.spacing)
+                        return pgramContainer.containerWidth
+                    }
+                    y: pgramContainer.containerHeight/2
+
+                    height: root.height
+                    width: 1
+
+                    active: pgramContainer.nextDifferent
+
+                    sourceComponent: Rectangle {
+                        implicitHeight: parent.height
+                        implicitWidth: 1
+
+                        transform: Rotation {
+                            angle: separatorLoader.angle
+                        }
+                    }
+                }
+
+                PgramShape {
+                    id: pgramShape
+                    currentWidth: pgramContainer.currentWidth //root.elementWidth
+                    currentHeight: pgramContainer.currentHeight //root.elementHeight
+
+                    ScreencopyView {
+                        id: windowView
+
+                        anchors.centerIn: parent
+
+                        height: pgramContainer.currentHeight
+                        width: height * sourceSize.width / sourceSize.height
+
+                        // implicitHeight: height
+                        // implicitWidth: width
+
+                        captureSource: modelData.wayland
+                        live: false
+                    }
+                }
+            }
+    }
+}

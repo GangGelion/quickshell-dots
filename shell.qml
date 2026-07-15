@@ -46,6 +46,8 @@ PanelWindow {
 
     OverviewPopup {}
 
+    MailThingy {}
+
     /* Text {
     // center the bar in its parent component (the window)
     id: clock
