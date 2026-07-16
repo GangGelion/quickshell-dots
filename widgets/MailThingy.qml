@@ -51,6 +51,12 @@ PanelWindow {
         anchors.centerIn: parent
         color: "transparent"
 
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowBlur: 2
+        }
+
         Shape {
             id: baseMail
             anchors.fill: parent
@@ -97,6 +103,12 @@ PanelWindow {
 
             Shape {
                 anchors.fill: parent
+                z: 2
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowBlur: 0.2
+                }
                 ShapePath {
                     id: backMailPath
                     strokeColor: "transparent"
@@ -122,13 +134,35 @@ PanelWindow {
                 }
             }
 
-            layer.enabled: true
-            layer.effect: MultiEffect {
-                shadowEnabled: true
-                shadowBlur: 5
+            Shape {
+                width: parent.width
+                height: parent.height
+                anchors.centerIn: parent
+
+                ShapePath {
+                    id: backShadowPath
+                    strokeColor: "transparent"
+                    fillColor: "#AA000000"
+
+                    startX: 0
+                    startY: 0
+
+                    PathLine {
+                        x: mail.width / 2 + 36
+                        y: 210
+                    }
+
+                    PathLine {
+                        x: mail.width
+                        y: 0
+                    }
+
+                    PathLine {
+                        x: 0
+                        y: 0
+                    }
+                }
             }
         }
-
-        
     }
 }

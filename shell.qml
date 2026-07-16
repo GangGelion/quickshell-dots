@@ -46,7 +46,9 @@ PanelWindow {
 
     OverviewPopup {}
 
-    MailThingy {}
+    Launcher {}
+
+    // MailThingy {}
 
     /* Text {
     // center the bar in its parent component (the window)
