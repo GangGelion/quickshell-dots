@@ -3,9 +3,13 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 
 import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Shapes
 import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
+
+import "../singletons"
 
 PanelWindow {
     id: root
@@ -32,6 +36,106 @@ PanelWindow {
 
         onPressed: {
             root.visible = !root.visible;
+        }
+    }
+
+    Rectangle {
+        anchors {
+            bottom: mail.top
+            left: mail.left
+            right: mail.right
+        }
+        height: queryLayout.implicitHeight + 50
+        color: "transparent"
+
+        ColumnLayout {
+            id: queryLayout
+            anchors {
+                centerIn: parent
+            }
+            width: parent.width - 30
+
+            Repeater {
+                model: ApplicationProvider.matchingApplications
+
+                delegate: Rectangle {
+                    id: searchResult
+                    property bool selected: {
+                        if (!ApplicationProvider.currentSelected) {
+                            return false
+                        }
+                        return ApplicationProvider.currentSelected.id == modelData.id
+                    }
+                    Layout.fillWidth: true
+                    anchors.margins: 10
+                    implicitHeight: titleText.implicitHeight + 20
+
+                    color: "transparent"
+
+                    Image {
+                        id: appIcon
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: 20
+                        width: parent.implicitHeight - 10
+                        height: width
+                        source: Quickshell.iconPath(modelData.icon)
+                    }
+
+                    Text {
+                        id: titleText
+                        anchors.left: appIcon.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 24
+                        text: modelData.name
+                        font.pointSize: 20
+                        color: "white"
+                        z: 2
+                    }
+
+                    Text {
+                        id: titleOutline
+                        anchors.left: appIcon.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.leftMargin: 24
+
+                        font.pointSize: 20
+                        color: "black"
+                        opacity: 0.5
+
+                        text: modelData.name
+                        
+                        transform: [
+                            Translate {
+                                x: 2
+                                y: 2
+                            }
+                        ]
+                        z: 1
+                    }
+
+                    // hope no one notices its off centered
+                    Rectangle {
+                        anchors.fill: parent
+                        color: searchResult.selected ? "#AAFFFFFF" : "#55FFFFFF"
+                        z: -1
+                        
+                        transform: Matrix4x4 {
+                            matrix: {
+                                // Calculate skew multiplier: tan(degrees * pi / 180)
+                                let skewX = Math.tan(-10 * Math.PI / 180);
+                                let skewY = Math.tan(0 * Math.PI / 180);
+
+                                // Matrix structure layout:
+                                // m11  m12  m13  m14 -> [X scale,  X skew,   0, Translate X]
+                                // m21  m22  m23  m24 -> [Y skew,   Y scale,  0, Translate Y]
+                                return Qt.matrix4x4(1, skewX, 0, 0, skewY, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+                            }
+                        }
+                    }
+
+                    opacity: selected ? 1 : 0.7
+                }
+            }
         }
     }
 
@@ -89,8 +193,8 @@ PanelWindow {
     }
 
     Rectangle {
-        property int borderLength: nameInput.implicitWidth + 50
         id: strokeRectangle
+        property int borderLength: nameInput.implicitWidth + 50
         anchors.fill: mail
         color: "transparent"
 
@@ -101,10 +205,21 @@ PanelWindow {
             focus: true
             x: 24
             anchors.verticalCenter: parent.verticalCenter
-            
+
+            text: ""
             font.pointSize: 14
             font.family: "JetBrains Mono"
             color: "white"
+
+            onTextChanged: {
+                ApplicationProvider.searchTerm = text;
+            }
+            
+            onAccepted: {
+                ApplicationProvider.currentSelected.execute()
+                root.visible = false
+                text = ""
+            }
 
         }
 
@@ -177,7 +292,7 @@ PanelWindow {
 
             ShapePath {
                 id: border2
-                property int length: Math.min(mail.width - root.calculateOffset(mail.height, 10), strokeRectangle.borderLength + (strokeRectangle.width - strokeRectangle.borderLength)*0.2)
+                property int length: Math.min(mail.width - root.calculateOffset(mail.height, 10), strokeRectangle.borderLength + (strokeRectangle.width - strokeRectangle.borderLength) * 0.2)
                 strokeWidth: 1
                 strokeColor: "#33FFFFFF"
                 fillColor: "transparent"
@@ -211,7 +326,7 @@ PanelWindow {
 
             ShapePath {
                 id: border3
-                property int length: Math.min(mail.width - root.calculateOffset(mail.height, 10), strokeRectangle.borderLength + (strokeRectangle.width - strokeRectangle.borderLength)*0.4)
+                property int length: Math.min(mail.width - root.calculateOffset(mail.height, 10), strokeRectangle.borderLength + (strokeRectangle.width - strokeRectangle.borderLength) * 0.4)
                 strokeWidth: 1
                 strokeColor: "#33FFFFFF"
                 fillColor: "transparent"

@@ -8,6 +8,7 @@ import QtQuick.Shapes
 import QtQuick.Effects
 
 import "../components/basic"
+import "../singletons/utils"
 
 PanelWindow {
     id: root
