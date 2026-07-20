@@ -55,7 +55,7 @@ PanelWindow {
         name: "toggle_overview"
 
         onPressed: {
-            //root.active = !root.active;
+            root.active = !root.active;
         }
     }
 

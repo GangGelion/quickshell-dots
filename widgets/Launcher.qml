@@ -32,7 +32,7 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
     GlobalShortcut {
-        name: "toggle_overview"
+        name: "toggle_launcher"
 
         onPressed: {
             root.visible = !root.visible;

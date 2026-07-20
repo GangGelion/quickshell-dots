@@ -2,16 +2,21 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
+import Quickshell.Services.UPower
 
 import "../singletons"
 
 Item {
+    id: root
     width: contentLayout.width + 20
-
     RowLayout {
         id: contentLayout
         anchors.centerIn: parent
         spacing: 10
+
+        Text {
+          text: `${UPower.devices.values[0].percentage * 100}%`
+        }
         
         Rectangle {
             id: cpuPill
@@ -30,7 +35,23 @@ Item {
                 color: "#66102030"
                 width: (parent.width - 6) * Math.max(0, Math.min(ResourceProvider.cpuTemperature - 30, 90)/60)
                 radius: 100
-            }
+              }
+
+              Rectangle {
+                anchors {
+                  top: parent.top
+                  bottom: parent.bottom
+                  left: parent.left
+                  margins: -2
+                }
+                z: -1
+                color: "#66103020"
+                radius: 100
+                width: {
+                  let thing = (parent.width + 4) * UPower.devices.values[0].percentage
+                  return thing
+                }
+              }
 
             /* Rectangle {
                 anchors {
